@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jelajah Keagungan Islam - PAI Kelas 7</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Earthly Harmony (Linen, Beaver, Sage, Slate Gray) -->
+    <!-- Application Structure Plan: Desain aplikasi ini menggunakan pendekatan modular berbasis tema, bukan bab-bab linier dari laporan sumber. Struktur ini dipilih untuk meningkatkan keterlibatan siswa dan memfasilitasi eksplorasi non-linear. Laman utama (Beranda) berfungsi sebagai dasbor visual yang mengarahkan pengguna ke dua pilar konten utama: "Keajaiban Alam" (konsep teologis tentang ciptaan) dan "Cermin Diri" (pengembangan karakter melalui iman). Navigasi yang jelas dan penggunaan kartu interaktif dirancang untuk menarik rasa ingin tahu siswa kelas 7. Setiap bagian memiliki pengantar untuk memberikan konteks, dan konten disajikan melalui komponen interaktif seperti tab, kartu balik, dan akordeon untuk mencegah kebosanan membaca teks panjang dan mendorong pembelajaran aktif. Alur ini mengubah materi pelajaran statis menjadi pengalaman belajar yang dinamis dan mandiri. -->
+    <!-- Visualization & Content Choices: 
+    1.  Info: Nama-nama Malaikat -> Goal: Menginformasikan dan membantu menghafal 10 malaikat utama. -> Viz/Method: Kartu Balik Interaktif (HTML/CSS/JS). -> Interaction: Klik untuk membalik kartu dan melihat tugas malaikat. -> Justification: Mengubah daftar sederhana menjadi aktivitas interaktif seperti kuis mini, meningkatkan daya ingat. -> Library: Vanilla JS.
+    2.  Info: Perbandingan Manusia vs. Malaikat -> Goal: Membandingkan sifat-sifat dasar kedua makhluk. -> Viz/Method: Diagram Batang Horizontal (Chart.js). -> Interaction: Tooltip saat hover untuk detail. -> Justification: Visualisasi perbandingan membuat perbedaan yang abstrak menjadi sangat jelas dan mudah dipahami dalam sekejap. -> Library: Chart.js (Canvas).
+    3.  Info: Kandungan Ayat (Q.S. al-Anbiya' & al-A'raf) -> Goal: Menjelaskan makna kata-kata kunci dalam ayat secara mendalam. -> Viz/Method: Blok Teks Interaktif dengan Sorotan (Tooltip). -> Interaction: Hover pada kata yang disorot untuk menampilkan tooltip penjelasan detail. -> Justification: Mendorong pemahaman mendalam terhadap teks suci, bukan hanya membaca terjemahan, dengan penjelasan yang tidak mengganggu alur baca. -> Library: Vanilla JS.
+    4.  Info: Kisah Teladan Sahabat -> Goal: Menyajikan cerita-cerita inspiratif yang lebih detail dan terstruktur. -> Viz/Method: Akordeon (HTML/CSS/JS). -> Interaction: Klik pada judul untuk membuka/menutup cerita. -> Justification: Mengelola teks naratif yang lebih panjang menjadi segmen yang mudah dicerna, mencegah kelelahan visual dan memungkinkan siswa fokus pada satu cerita pada satu waktu. -> Library: Vanilla JS.
+    CONFIRMING NO SVG/Mermaid. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDF6EC; /* Linen */
+            color: #3C3633; /* Darker Beaver for text */
+        }
+        .nav-link {
+            transition: color 0.3s, border-color 0.3s;
+        }
+        .nav-link.active {
+            color: #A4907C; /* Beaver */
+            border-bottom-color: #A4907C;
+        }
+        .nav-link:hover {
+            color: #A4907C;
+        }
+        .card {
+            transition: transform 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .flip-card {
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 0.75rem;
+        }
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .tab-btn.active {
+            background-color: #A4907C; /* Beaver */
+            color: #FDF6EC; /* Linen */
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 2px dotted #A4907C; /* Beaver */
+            cursor: help;
+        }
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 240px;
+            background-color: #3C3633;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 8px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -120px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-[#F0EBE3]/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl md:text-2xl font-bold text-[#A4907C]">PAI Kelas 7</h1>
+            <div class="space-x-4 md:space-x-8 text-sm md:text-base">
+                <a href="#beranda" class="nav-link font-semibold pb-1 border-b-2 border-transparent">Beranda</a>
+                <a href="#alam" class="nav-link font-semibold pb-1 border-b-2 border-transparent">Keajaiban Alam</a>
+                <a href="#diri" class="nav-link font-semibold pb-1 border-b-2 border-transparent">Cermin Diri</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8 md:py-12">
+        
+        <section id="beranda" class="content-section min-h-screen text-center flex flex-col justify-center">
+            <h2 class="text-3xl md:text-5xl font-bold text-[#A4907C] mb-4">Jelajah Keagungan Islam</h2>
+            <p class="text-lg md:text-xl text-gray-600 max-w-3xl mx-auto mb-12">Selamat datang di petualangan belajar Pendidikan Agama Islam! Di sini, kita akan menjelajahi kebesaran Allah Swt. melalui ciptaan-Nya, belajar menjadi pribadi unggul, dan memahami indahnya ajaran Islam dengan cara yang seru dan interaktif.</p>
+            
+            <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                <a href="#alam" class="card-link">
+                    <div class="card bg-[#E4DCCF] p-8 rounded-xl shadow-lg h-full flex flex-col justify-center">
+                        <span class="text-5xl mb-4">🌌</span>
+                        <h3 class="text-2xl font-bold text-[#3C3633] mb-2">Keajaiban Alam</h3>
+                        <p class="text-gray-700">Saksikan bukti kekuasaan Allah Swt. yang tersebar di alam semesta. Dari penciptaan langit hingga pentingnya air, semua menunjukkan keagungan-Nya.</p>
+                    </div>
+                </a>
+                <a href="#diri" class="card-link">
+                    <div class="card bg-[#E4DCCF] p-8 rounded-xl shadow-lg h-full flex flex-col justify-center">
+                        <span class="text-5xl mb-4">🪞</span>
+                        <h3 class="text-2xl font-bold text-[#3C3633] mb-2">Cermin Diri</h3>
+                        <p class="text-gray-700">Belajar mawas diri dan introspeksi dengan memahami iman kepada malaikat. Teladani para sahabat Nabi untuk menjadi pribadi yang lebih baik.</p>
+                    </div>
+                </a>
+            </div>
+        </section>
+
+        <section id="alam" class="content-section min-h-screen pt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#A4907C] mb-3">Keajaiban Alam: Bukti Kekuasaan Allah Swt.</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">Di bagian ini, kita akan merenungkan bagaimana alam semesta, dari galaksi yang luas hingga setetes air, menunjukkan keagungan Sang Pencipta. Gunakan tab di bawah untuk menjelajahi berbagai topik menarik secara mendalam.</p>
+            </div>
+
+            <div class="bg-white/50 rounded-xl p-4 md:p-8 shadow-md">
+                <div class="flex justify-center border-b border-gray-200 mb-6">
+                    <button class="tab-btn py-2 px-4 font-semibold text-gray-600 rounded-t-lg" data-tab="ayat">Tadabbur Ayat</button>
+                    <button class="tab-btn py-2 px-4 font-semibold text-gray-600 rounded-t-lg" data-tab="sains">Sains & Al-Qur'an</button>
+                    <button class="tab-btn py-2 px-4 font-semibold text-gray-600 rounded-t-lg" data-tab="ilmu">Pentingnya Ilmu</button>
+                </div>
+
+                <div id="tab-ayat" class="tab-content">
+                    <h3 class="text-xl font-bold text-center text-[#3C3633] mb-6">Merenungi Firman Allah tentang Penciptaan</h3>
+                    <div class="space-y-8">
+                        <div class="bg-[#F0EBE3] p-6 rounded-lg">
+                            <p class="text-lg font-semibold text-[#A4907C] mb-2">Q.S. al-Anbiya'/21:30</p>
+                            <p dir="rtl" class="text-2xl text-right font-mono mb-4">اَوَلَمْ يَرَ الَّذِيْنَ كَفَرُوْٓا اَنَّ السَّمٰوٰتِ وَالْاَرْضَ كَانَتَا <span class="tooltip">رَتْقًا<span class="tooltip-text">'Ratqan' berarti sesuatu yang padu, tertutup, dan menjadi satu kesatuan yang solid. Menggambarkan kondisi alam semesta sebelum terpisah.</span></span> فَفَتَقْنٰهُمَاۗ وَجَعَلْنَا مِنَ الْمَاۤءِ كُلَّ شَيْءٍ حَيٍّۗ اَفَلَا يُؤْمِنُوْنَ</p>
+                            <p class="text-gray-700 italic mb-4">Artinya: "Dan apakah orang-orang kafir tidak mengetahui bahwa langit dan bumi keduanya dahulu menyatu, kemudian Kami <span class="tooltip">pisahkan<span class="tooltip-text">Kata 'fataqnaahumaa' menunjukkan proses pemisahan atau 'pembelahan' yang aktif dari Allah Swt., yang melahirkan alam semesta seperti yang kita kenal.</span></span> antara keduanya; dan Kami jadikan segala sesuatu yang hidup berasal dari air; maka mengapa mereka tidak beriman?"</p>
+                            <p class="text-gray-700">Ayat ini mengajak kita menggunakan akal ('yara' berarti melihat dan memahami) untuk merenungkan keajaiban penciptaan. Dari kesatuan yang padu, Allah menciptakan alam semesta yang luas, dan menjadikan air sebagai sumber utama kehidupan. Ini adalah bukti nyata yang seharusnya menuntun kita kepada keimanan.</p>
+                        </div>
+                        <div class="bg-[#F0EBE3] p-6 rounded-lg">
+                            <p class="text-lg font-semibold text-[#A4907C] mb-2">Q.S. al-A'raf/7:54</p>
+                             <p class="text-gray-700">"Sungguh, Tuhanmu (adalah) Allah yang menciptakan langit dan bumi dalam <span class="tooltip">enam masa<span class="tooltip-text">Bukan 6x24 jam. 'Enam masa' adalah enam periode atau tahapan waktu yang menunjukkan adanya proses, keteraturan, dan perencanaan dalam ciptaan-Nya.</span></span>, lalu Dia bersemayam di atas ‘Arsy..."</p>
+                             <p class="text-gray-700 mt-2">Ayat ini menegaskan bahwa penciptaan alam semesta berjalan melalui proses yang teratur, bukan kebetulan. Keteraturan ini juga terlihat pada pergantian siang dan malam, serta pergerakan matahari, bulan, dan bintang yang tunduk pada hukum Allah (sunnatullah). Ini menunjukkan bahwa hanya Allah-lah yang berhak menciptakan dan mengatur segalanya.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-sains" class="tab-content">
+                    <h3 class="text-xl font-bold text-center text-[#3C3633] mb-6">Kesejalanan Al-Qur'an dan Sains Modern</h3>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div class="bg-[#F0EBE3] p-6 rounded-lg">
+                            <h4 class="font-bold text-lg mb-2">Teori Big Bang & Perluasan Alam Semesta</h4>
+                            <p class="text-gray-700 mb-2">Ilmuwan meyakini alam semesta berawal dari satu titik super padat yang meledak (Big Bang) dan terus mengembang hingga kini.</p>
+                            <p class="text-gray-700">Isyarat dalam Q.S. al-Anbiya' ayat 30 tentang "langit dan bumi yang menyatu (ratqan) lalu dipisahkan (fataqnaahumaa)" menunjukkan keselarasan yang menakjubkan dengan teori ini. Ini adalah bukti keagungan Al-Qur'an yang melampaui zaman.</p>
+                        </div>
+                         <div class="bg-[#F0EBE3] p-6 rounded-lg">
+                            <h4 class="font-bold text-lg mb-2">Air Sebagai Sumber Kehidupan</h4>
+                            <p class="text-gray-700 mb-2">Sains modern membuktikan bahwa air (H₂O) adalah komponen utama semua sel makhluk hidup, sangat vital untuk metabolisme dan proses biologis lainnya.</p>
+                            <p class="text-gray-700">Al-Qur'an dengan lugas menyatakan dalam Q.S. al-Anbiya' ayat 30: "...dan Kami jadikan segala sesuatu yang hidup berasal dari air...". Pernyataan ini mengingatkan kita akan ketergantungan mutlak pada karunia Allah dan pentingnya menjaga sumber air.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tab-ilmu" class="tab-content">
+                    <h3 class="text-xl font-bold text-center text-[#3C3633] mb-6">Mengapa Islam Mewajibkan Menuntut Ilmu?</h3>
+                    <p class="text-center text-gray-600 mb-6">Rasulullah Saw. bersabda, "Menuntut ilmu itu wajib atas setiap Muslim." (HR. Ibnu Majah). Kewajiban ini memiliki tujuan yang sangat mulia:</p>
+                    <ul class="list-disc list-inside max-w-2xl mx-auto space-y-3 text-left">
+                        <li><strong>Untuk Mengenal Allah (Ma'rifatullah):</strong> Semakin dalam ilmu kita tentang ciptaan-Nya, semakin kita kagum dan mengenal kebesaran Sang Pencipta.</li>
+                        <li><strong>Menjalankan Peran sebagai Khalifah:</strong> Manusia ditugaskan memakmurkan bumi. Tanpa ilmu (sains, teknologi, sosial), kita tidak bisa mengelola sumber daya alam dengan bijak.</li>
+                        <li><strong>Beribadah dengan Benar:</strong> Ilmu fikih mengajarkan kita cara salat, puasa, dan ibadah lainnya sesuai tuntunan agar diterima oleh Allah Swt.</li>
+                        <li><strong>Meninggikan Derajat Manusia:</strong> Allah berjanji dalam Q.S. al-Mujadalah: 11 akan meninggikan derajat orang-orang yang beriman dan berilmu.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="diri" class="content-section min-h-screen pt-20">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-4xl font-bold text-[#A4907C] mb-3">Cermin Diri: Mawas Diri & Introspeksi</h2>
+                <p class="text-lg text-gray-600 max-w-3xl mx-auto">Setelah mengagumi ciptaan-Nya, mari kita bercermin. Iman kepada malaikat, makhluk gaib ciptaan Allah, akan menumbuhkan sikap hati-hati (mawas diri), karena kita sadar setiap perbuatan kita selalu diawasi dan dicatat. Ini adalah kunci untuk menjadi pribadi yang unggul.</p>
+            </div>
+            
+            <div class="mb-12">
+                 <h3 class="text-2xl font-bold text-center text-[#3C3633] mb-2">Mengenal 10 Malaikat Utama dan Tugasnya</h3>
+                 <p class="text-center text-gray-600 mb-8">Iman kepada malaikat adalah rukun iman kedua. Ini berarti meyakini mereka ada, diciptakan dari cahaya, dan selalu taat pada perintah Allah. Klik setiap kartu untuk melihat tugas mereka!</p>
+                <div id="malaikat-grid" class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                 <div class="bg-white/50 p-6 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold text-center text-[#3C3633] mb-4">Manusia vs. Malaikat</h3>
+                    <p class="text-center text-gray-600 mb-4">Meski sama-sama makhluk Allah, kita punya perbedaan mendasar. Malaikat diciptakan untuk taat, sedangkan manusia diberi pilihan. Grafik ini menunjukkan beberapa perbedaannya.</p>
+                    <div class="chart-container">
+                        <canvas id="perbandinganChart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white/50 p-6 rounded-xl shadow-md">
+                    <h3 class="text-2xl font-bold text-center text-[#3C3633] mb-6">Kisah Teladan Mawas Diri Para Sahabat</h3>
+                    <div id="accordion-container" class="space-y-2">
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#E4DCCF] mt-16 py-6">
+        <div class="container mx-auto text-center text-gray-600">
+            <p>&copy; 2025 Aplikasi Belajar PAI. Dikembangkan untuk pembelajaran yang lebih mendalam dan menyenangkan.</p>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            const malaikatData = [
+                { name: 'Jibril', task: 'Menyampaikan wahyu' },
+                { name: 'Mikail', task: 'Membagi rezeki & mengatur alam' },
+                { name: 'Israfil', task: 'Meniup sangkakala kiamat' },
+                { name: 'Izrail', task: 'Mencabut nyawa (Malaikat Maut)' },
+                { name: 'Munkar', task: 'Menanyai di alam kubur' },
+                { name: 'Nakir', task: 'Menanyai di alam kubur' },
+                { name: 'Raqib', task: 'Mencatat amal baik' },
+                { name: 'Atid', task: 'Mencatat amal buruk' },
+                { name: 'Malik', task: 'Menjaga pintu neraka' },
+                { name: 'Ridwan', task: 'Menjaga pintu surga' },
+            ];
+
+            const malaikatGrid = document.getElementById('malaikat-grid');
+            malaikatData.forEach(m => {
+                const card = document.createElement('div');
+                card.className = 'flip-card h-32 md:h-40 cursor-pointer';
+                card.innerHTML = `
+                    <div class="flip-card-inner shadow-md rounded-xl">
+                        <div class="flip-card-front bg-[#A4907C] text-white p-2">
+                            <p class="text-lg md:text-xl font-bold text-center">${m.name}</p>
+                        </div>
+                        <div class="flip-card-back bg-[#E4DCCF] text-[#3C3633] p-2">
+                            <p class="font-semibold">Tugas:</p>
+                            <p class="text-sm md:text-base text-center">${m.task}</p>
+                        </div>
+                    </div>
+                `;
+                card.addEventListener('click', () => {
+                    card.classList.toggle('flipped');
+                });
+                malaikatGrid.appendChild(card);
+            });
+
+            const kisahData = [
+                { title: 'Umar bin Khattab ra. - Pemimpin yang Introspektif', content: 'Sayyidina Umar sangat terkenal dengan ucapannya, "Hisablah dirimu sebelum kamu dihisab." Ini adalah inti dari introspeksi. Sebagai pemimpin, beliau tidak hanya duduk di istana, tetapi sering berkeliling di malam hari untuk memastikan tidak ada rakyatnya yang kelaparan atau terzalimi. Suatu malam, beliau menemukan seorang ibu memasak batu untuk menenangkan anaknya yang kelaparan. Tanpa ragu, Umar sendiri memanggul sekarung gandum dari kas negara dan memasakkannya untuk keluarga itu. Sikap ini menunjukkan mawas diri yang luar biasa, selalu mengevaluasi apakah amanah kepemimpinan sudah dijalankan dengan benar.' },
+                { title: 'Abu Bakar Ash-Shiddiq ra. - Sahabat yang Penuh Hati-hati', content: 'Meskipun dijamin masuk surga oleh Rasulullah Saw., Sayyidina Abu Bakar tidak pernah berhenti berhati-hati dalam setiap tindakan dan ucapannya. Beliau sangat takut jika ada perbuatannya yang tidak sesuai dengan ajaran Islam. Keimanan beliau yang kokoh dan ketakutannya kepada Allah membuatnya selalu mawas diri. Beliau pernah berkata, "Aku tidak merasa aman dari makar (tipu daya) Allah, meskipun salah satu kakiku sudah berada di dalam surga." Ini menunjukkan betapa dalamnya sikap introspeksi beliau.' },
+                { title: 'Kisah Taubat Abu Lubabah ra. - Penyesalan yang Sungguh-sungguh', content: 'Dalam suatu peristiwa, Abu Lubabah merasa telah berkhianat kepada Allah dan Rasul-Nya karena tanpa sengaja membocorkan sebuah rahasia kepada musuh. Seketika itu juga, penyesalan yang mendalam melandanya. Tanpa menunggu hukuman, beliau langsung pergi ke Masjid Nabawi dan mengikat dirinya di sebuah tiang. Beliau bersumpah tidak akan melepaskan diri sampai Allah Swt. menerima taubatnya. Kisah ini adalah contoh tertinggi dari introspeksi yang diikuti tindakan nyata untuk memohon ampun dan memperbaiki kesalahan.' },
+            ];
+
+            const accordionContainer = document.getElementById('accordion-container');
+            kisahData.forEach((kisah, index) => {
+                const item = document.createElement('div');
+                item.className = 'border border-gray-200 rounded-lg';
+                item.innerHTML = `
+                    <button class="accordion-btn w-full text-left p-4 bg-[#F0EBE3] hover:bg-[#E4DCCF] font-semibold flex justify-between items-center transition">
+                        <span>${kisah.title}</span>
+                        <span class="transform transition-transform duration-300 text-xl font-light">+</span>
+                    </button>
+                    <div class="accordion-content">
+                        <p class="p-4 text-gray-700 bg-white rounded-b-lg">${kisah.content}</p>
+                    </div>
+                `;
+                accordionContainer.appendChild(item);
+            });
+            
+            const accordionBtns = document.querySelectorAll('.accordion-btn');
+            accordionBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const isActive = this.classList.contains('active');
+                    accordionBtns.forEach(b => {
+                        b.classList.remove('active');
+                        b.nextElementSibling.style.maxHeight = null;
+                        b.querySelector('span:last-child').style.transform = 'rotate(0deg)';
+                    });
+
+                    if (!isActive) {
+                        this.classList.add('active');
+                        const content = this.nextElementSibling;
+                        const icon = this.querySelector('span:last-child');
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        icon.style.transform = 'rotate(45deg)';
+                    }
+                });
+            });
+
+            const perbandinganCtx = document.getElementById('perbandinganChart').getContext('2d');
+            new Chart(perbandinganCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Diciptakan dari', 'Sifat', 'Kebutuhan Fisik', 'Nafsu', 'Ibadah'],
+                    datasets: [{
+                        label: 'Manusia',
+                        data: [1, 3, 5, 5, 3], 
+                        backgroundColor: '#A4907C',
+                        borderColor: '#8e7b6b',
+                        borderWidth: 1
+                    }, {
+                        label: 'Malaikat',
+                        data: [2, 5, 0, 0, 5],
+                        backgroundColor: '#E4DCCF',
+                        borderColor: '#c7bca7',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const label = context.dataset.label || '';
+                                    const value = context.raw;
+                                    const property = context.label;
+                                    let detail = '';
+                                    if(property === 'Diciptakan dari') detail = (label === 'Manusia') ? 'Tanah' : 'Cahaya (Nur)';
+                                    else if (property === 'Sifat') detail = (label === 'Manusia') ? 'Bisa taat / ingkar' : 'Selalu taat';
+                                    else if (property === 'Kebutuhan Fisik') detail = (label === 'Manusia') ? 'Makan, minum, tidur' : 'Tidak memiliki';
+                                    else if (property === 'Nafsu') detail = (label === 'Manusia') ? 'Memiliki hawa nafsu' : 'Tidak memiliki';
+                                    else if (property === 'Ibadah') detail = (label === 'Manusia') ? 'Bisa lalai & lelah' : 'Selalu beribadah tanpa lelah';
+                                    return `${label}: ${detail}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: false,
+                            stacked: true,
+                        },
+                        y: {
+                            stacked: true,
+                            ticks: {
+                                font: {
+                                    weight: 'bold'
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetTab = btn.getAttribute('data-tab');
+
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+
+                    tabContents.forEach(content => {
+                        if (content.id === `tab-${targetTab}`) {
+                            content.classList.add('active');
+                        } else {
+                            content.classList.remove('active');
+                        }
+                    });
+                });
+            });
+            document.querySelector('.tab-btn').click(); 
+            
+            const navLinks = document.querySelectorAll('.nav-link, .card-link');
+            const sections = document.querySelectorAll('.content-section');
+
+            function changeActiveLink() {
+                let index = sections.length;
+                while(--index && window.scrollY + 100 < sections[index].offsetTop) {}
+                
+                document.querySelectorAll('.nav-link').forEach((link) => link.classList.remove('active'));
+                const correspondingNav = document.querySelector(`.nav-link[href="#${sections[index].id}"]`);
+                if(correspondingNav) {
+                   correspondingNav.classList.add('active');
+                }
+            }
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        window.scrollTo({
+                            top: targetSection.offsetTop - 70,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+
+            window.addEventListener('scroll', changeActiveLink);
+            changeActiveLink();
+
+        });
+    </script>
+</body>
+</html>
